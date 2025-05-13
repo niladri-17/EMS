@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Online Examination System</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#f0f7ff',
+                100: '#dff0ff',
+                200: '#b9e2ff',
+                300: '#7fcaff',
+                400: '#38a8ff',
+                500: '#0e8aff',
+                DEFAULT: '#0a6edf', 
+                700: '#0057c2',
+                800: '#084698',
+                900: '#0c3b77',
+              },
+              secondary: {
+                50: '#f8fafc',
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                DEFAULT: '#64748b',
+                400: '#4b5563',
+                500: '#374151',
+                dark: '#1e293b',
+              },
+              accent: {
+                50: '#fffaf0',
+                100: '#feebcb',
+                200: '#fcd283',
+                300: '#f9b954',
+                DEFAULT: '#f59e0b', 
+                500: '#d97706',
+                600: '#b45309',
+                700: '#92400e',
+              },
+              success: {
+                light: '#bbf7d0',
+                DEFAULT: '#22c55e',
+                dark: '#15803d',
+              },
+              warning: {
+                light: '#fef3c7',
+                DEFAULT: '#eab308',
+                dark: '#a16207',  
+              },
+              danger: {
+                light: '#fecaca',
+                DEFAULT: '#ef4444',
+                dark: '#b91c1c',
+              },
+            },
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+              display: ['Quicksand', 'sans-serif'],
+            },
+            boxShadow: {
+              'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              'hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+              'inner-glow': 'inset 0 2px 4px 0 rgba(255, 255, 255, 0.3)',
+            },
+            animation: {
+              'float': 'float 5s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'bounce-slow': 'bounce 2s infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            },
+            borderRadius: {
+              'xl': '1rem',
+              '2xl': '1.5rem',
+            },
+          }
+        }
+      }
+    </script>
+    
+    <style type="text/tailwindcss">
+      @layer base {
+        body {
+          @apply font-sans text-gray-800 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          @apply font-display font-semibold;
+        }
+      }
+      
+      @layer components {
+        .card {
+          @apply bg-white rounded-xl shadow-soft p-6 transition-all duration-300 hover:shadow-hover;
+        }
+        
+        .btn-primary {
+          @apply bg-primary hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center active:scale-95;
+        }
+        
+        .btn-secondary {
+          @apply bg-white border border-gray-300 text-secondary hover:bg-gray-50 font-medium py-2.5 px-6 rounded-lg transition-all duration-300 active:scale-95;
+        }
+        
+        .input-field {
+          @apply w-full border border-gray-300 rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
