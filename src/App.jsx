@@ -12,12 +12,32 @@ import PermissionPage from './pages/PermissionPage';
 import ExamPreparationPage from './pages/ExamPreparationPage';
 import ExamPage from './pages/ExamPage';
 import MainLayout from './layouts/MainLayout';
-import { ExamProvider } from './context/ExamContext';
+import { ExamProvider, useExam } from './context/ExamContext';
+import Toast from './components/Toast';
+import AntiCheatSystem from './AntiCheatSystem';
+
+const ToastNotification = () => {
+  const { examState, updateExamState } = useExam();
+  const { toast } = examState;
+
+  if (!toast.show) return null;
+  
+  const handleClose = () => {
+    updateExamState({
+      toast: { ...toast, show: false }
+    });
+  };
+
+  return (
+    <Toast message={toast.message} type={toast.type} onClose={handleClose} />
+  );
+};
 
 function App() {
   return (
     <ExamProvider>
       <BrowserRouter>
+        <ToastNotification />
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={

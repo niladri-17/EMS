@@ -1,50 +1,35 @@
 import { useState, useEffect } from 'react';
 
 const useFullscreen = () => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const enterFullscreen = () => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else if (document.documentElement.mozRequestFullScreen) {
-      document.documentElement.mozRequestFullScreen();
-    } else if (document.documentElement.webkitRequestFullscreen) {
-      document.documentElement.webkitRequestFullscreen();
-    } else if (document.documentElement.msRequestFullscreen) {
-      document.documentElement.msRequestFullscreen();
-    }
+  // Initialize with actual fullscreen state
+  const getInitialFullscreenState = () => {
+    return !!(
+      document.fullscreenElement || 
+      document.mozFullScreenElement || 
+      document.webkitFullscreenElement || 
+      document.msFullscreenElement
+    );
   };
+  
+  const [isFullscreen, setIsFullscreen] = useState(getInitialFullscreenState());
+  const [fullscreenError, setFullscreenError] = useState(null);
 
-  const exitFullscreen = () => {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      enterFullscreen();
-    } else {
-      exitFullscreen();
-    }
-  };
-
+  // Update fullscreen state when component mounts and when fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(
+      const fullscreenElement = 
         document.fullscreenElement || 
         document.mozFullScreenElement || 
         document.webkitFullscreenElement || 
-        document.msFullscreenElement
-      );
+        document.msFullscreenElement;
+      
+      setIsFullscreen(!!fullscreenElement);
     };
-
+    
+    // Check initial state when component mounts
+    handleFullscreenChange();
+    
+    // Set up event listeners
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -58,7 +43,79 @@ const useFullscreen = () => {
     };
   }, []);
 
-  return { isFullscreen, enterFullscreen, exitFullscreen, toggleFullscreen };
+  const enterFullscreen = async () => {
+    try {
+      // If already in fullscreen, don't try to enter again
+      if (isFullscreen) {
+        return true;
+      }
+      
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if (document.documentElement.mozRequestFullScreen) {
+        await document.documentElement.mozRequestFullScreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        await document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.msRequestFullscreen) {
+        await document.documentElement.msRequestFullscreen();
+      }
+      setFullscreenError(null);
+      // We don't need to set isFullscreen manually here - the event listener will handle it
+      return true;
+    } catch (error) {
+      setFullscreenError(error.message);
+      return false;
+    }
+  };
+
+  const exitFullscreen = async () => {
+    try {
+      // If not in fullscreen, don't try to exit
+      if (!isFullscreen) {
+        return true;
+      }
+      
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        await document.mozCancelFullScreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen();
+      }
+      // We don't need to set isFullscreen manually here - the event listener will handle it
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const toggleFullscreen = async () => {
+    if (!isFullscreen) {
+      return await enterFullscreen();
+    } else {
+      return await exitFullscreen();
+    }
+  };
+  
+  const isFullscreenAvailable = () => {
+    return (
+      document.fullscreenEnabled ||
+      document.mozFullScreenEnabled ||
+      document.webkitFullscreenEnabled ||
+      document.msFullscreenEnabled
+    );
+  };
+
+  return { 
+    isFullscreen, 
+    enterFullscreen, 
+    exitFullscreen, 
+    toggleFullscreen, 
+    isFullscreenAvailable,
+    fullscreenError 
+  };
 };
 
 export default useFullscreen;
