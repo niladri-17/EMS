@@ -1,23 +1,37 @@
 import { useState } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuthStore } from "../store/useAuthStore";
+import { useStudentStore } from "../store/useStudentStore";
+import { useEffect } from "react";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
     emailId: "",
     examCode: "",
   });
-  const { studentLogin: login, isLoggingIn } = useAuthStore();
-  const { examId } = useParams();
+
+  // Move useParams() to the top level of the component
+  const { examId: urlExamId } = useParams();
+
+  const { examId, login, isLoggingIn, setExamId } = useStudentStore();
   console.log(examId);
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (!examId && urlExamId) {
+      setExamId(urlExamId);
+    }
+  }, [examId, urlExamId, setExamId]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(examId, formData);
-    navigate("/permissions");
+
+    try {
+
+      await login(examId, formData);
+
+    } catch (error) {
+      console.error("Unexpected error during login:", error);
+    }
   };
 
   return (

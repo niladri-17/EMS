@@ -43,7 +43,7 @@ const examAttemptSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'in-progress', 'submitted', 'reviewed'],
+    enum: ['pending', 'in-progress', 'submitted'],
     default: 'pending',
   },
   result: {

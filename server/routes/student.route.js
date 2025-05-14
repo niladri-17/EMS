@@ -2,6 +2,7 @@ import express from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import {
   login,
+  fetchExamQuestions,
 } from "../controllers/student.controller.js";
 
 const router = express.Router();
@@ -12,6 +13,6 @@ const router = express.Router();
 
 // EMAIL LOGIN
 router.route("/login/:examId").post(login);
-
+router.route("/questions/:examId").get(verifyJWT, fetchExamQuestions);
 
 export default router;

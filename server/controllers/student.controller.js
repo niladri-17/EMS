@@ -7,6 +7,7 @@ import Question from "../models/question.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import mongoose from "mongoose";
 
 const options = {
   httpOnly: true, // This cookie cannot be accessed by client side javascript
@@ -97,7 +98,7 @@ export const login = asyncHandler(async (req, res) => {
   const examAttempt = await ExamAttempt.findOne({
     exam: examId,
     student: studentId,
-    code: examCode,
+    examCode: examCode,
   });
 
   if (!examAttempt) {
@@ -108,7 +109,7 @@ export const login = asyncHandler(async (req, res) => {
     student
   );
 
-  const loggedInUser = await User.findById(user._id).select(
+  const loggedInUser = await User.findById(student._id).select(
     "-password -refreshToken"
   );
 
@@ -240,14 +241,65 @@ export const getMyAttempts = async (req, res) => {
   }
 };
 
-export const fetchQuestions = asyncHandler(async (req, res) => {
+export const fetchExamQuestions = asyncHandler(async (req, res) => {
   const { examId } = req.params; // Exam ID passed as a URL parameter
+  const studentId = req.user._id; // Assuming you have authenticated user in req.user
 
-  // Fetch random questions for the particular exam, ensuring no repeats
-  const questions = await Question.aggregate([
-    { $match: { exam: new mongoose.Types.ObjectId(examId) } }, // Match questions for the specific exam
-    { $sample: { size: 10 } }, // Randomly select 10 questions (you can adjust size)
-  ]);
+  // First check if there's an in-progress attempt for this student and exam
+  const existingAttempt = await ExamAttempt.findOne({
+    student: studentId,
+    exam: examId,
+    status: "in-progress",
+  }).lean();
+
+  let questions = [];
+  let attemptId = null;
+
+  // If there's an in-progress attempt
+  if (existingAttempt) {
+    attemptId = existingAttempt._id;
+
+    // 1. Fetch random questions from the Question schema using examId
+    questions = await Question.aggregate([
+      { $match: { exam: new mongoose.Types.ObjectId(examId) } },
+    ]);
+
+    questions = shuffleArray([...questions]); // Shuffle the questions to randomize order
+
+    // 2. Get answered questions from the attempt
+    const answeredQuestions = existingAttempt.answers || [];
+
+    // 3. Map answers to questions - add selectedOption to each question if it was answered
+    questions = questions.map((question) => {
+      // Find if this question has an answer in the existing attempt
+      const answer = answeredQuestions.find(
+        (ans) => ans.question.toString() === question._id.toString()
+      );
+
+      // Add selectedOption to the question object
+      return {
+        id: question._id,
+        question: question.questionText,
+        options: question.options,
+        selectedOption: answer ? answer.selectedOption : null,
+      };
+    });
+  } else {
+    // No in-progress attempt, fetch random questions
+    questions = await Question.aggregate([
+      { $match: { exam: new mongoose.Types.ObjectId(examId) } },
+    ]);
+
+    questions = shuffleArray([...questions]);
+
+    // Format questions to include null selectedOption
+    questions = questions.map((question) => ({
+      id: question._id,
+      question: question.questionText,
+      options: question.options,
+      selectedOption: null,
+    }));
+  }
 
   if (questions.length === 0) {
     throw new ApiError(404, "No questions found for this exam.");
@@ -257,3 +309,32 @@ export const fetchQuestions = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, questions, "Questions fetched successfully"));
 });
+
+// Helper function to generate a unique exam code
+function generateUniqueExamCode() {
+  // Generate a random 6-character alphanumeric code
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * chars.length);
+    code += chars[randomIndex];
+  }
+
+  // Add a timestamp component to ensure uniqueness
+  const timestamp = Date.now().toString(36).slice(-4);
+  return `${code}-${timestamp}`;
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+    [array[i], array[j]] = [array[j], array[i]]; // swap
+  }
+  return array;
+}
+
+// first check in the exam attempt if the exam is in progress or not
+// if yes then fetch the answers which has question._id and selectedOption
+//    fetch random questions from the question schema using the examId without repeating
+//    add the selectedOption to the question object
+// if no then fetch random questions from the question schema using the examId without repeating

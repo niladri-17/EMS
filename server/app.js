@@ -3,14 +3,14 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import errorHandler from "./middlewares/error.middleware.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
-
+app.use(cookieParser());
 app.use(
   cors({
     // origin: process.env.CORS_ORIGIN, // allow to server to accept request from different origin

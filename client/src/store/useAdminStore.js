@@ -8,8 +8,7 @@ const BASE_URL ="http://localhost:500"
 
 // Create a slice for persisted state
 const createPersistedSlice = (set, get) => ({
-  authUser: null,
-  permissionsAccepted: false,
+  adminAuthUser: null,
 });
 
 // Create a slice for non-persisted state
@@ -18,13 +17,10 @@ const createNonPersistedSlice = (set, get) => ({
   isSigningUp: false,
   isLoggingIn: false,
   isUpdatingProfile: false,
-  // isCheckingAuth: false,
-  onlineUsers: [],
-  searchedUsers: [],
   isUsersSearching: false,
 });
 
-export const useAuthStore = create(
+export const useAdminStore = create(
   persist(
     (set, get) => ({
       ...createPersistedSlice(set, get),
@@ -34,27 +30,27 @@ export const useAuthStore = create(
       //   try {
       //     const res = await axiosInstance.get("/auth/check");
       //     set({
-      //       authUser: res.data,
+      //       adminAuthUser: res.data,
       //       isCheckingAuth: false,
       //     });
       // get().connectSocket();
       //   } catch (error) {
       //     console.log("Error in checkAuth:", error);
       //     set({
-      //       authUser: null,
+      //       adminAuthUser: null,
       //       isCheckingAuth: false,
       //     });
       //   }
       // },
 
-      setAuthUser: (user) => set({ authUser: user }),
+      setadminAuthUser: (user) => set({ adminAuthUser: user }),
       setOnlineUsers: (users) => set({ onlineUsers: users }),
 
       signup: async (data) => {
         set({ isSigningUp: true });
         try {
           const res = await axiosInstance.post("/auth/signup", data);
-          set({ authUser: res.data.data.user });
+          set({ adminAuthUser: res.data.data.user });
           toast.success("Account created successfully");
           get().connectSocket();
         } catch (error) {
@@ -68,7 +64,7 @@ export const useAuthStore = create(
         set({ isLoggingIn: true });
         try {
           const res = await axiosInstance.post(`/login/${examId}`, data);
-          set({ authUser: res.data.data.user });
+          set({ adminAuthUser: res.data.data.user });
           toast.success("Logged in successfully");
         //   get().connectSocket();
         } catch (error) {
@@ -90,7 +86,7 @@ export const useAuthStore = create(
           console.log("Error in logout:", error);
           // toast.error(error.response.data.message);
         } finally {
-          set({ authUser: null, onlineUsers: [] });
+          set({ adminAuthUser: null, onlineUsers: [] });
         }
       },
 
@@ -98,7 +94,7 @@ export const useAuthStore = create(
         set({ isUpdatingProfile: true });
         try {
           const res = await axiosInstance.patch("/auth/update-avatar", data);
-          set({ authUser: res.data.data });
+          set({ adminAuthUser: res.data.data });
           toast.success("Avatar updated successfully");
         } catch (error) {
           console.log("error in update profile:", error);
@@ -128,12 +124,12 @@ export const useAuthStore = create(
         set({ searchedUsers: searchedUsers }),
 
       connectSocket: () => {
-        const { authUser } = get();
-        if (!authUser || get().socket?.connected) return;
+        const { adminAuthUser } = get();
+        if (!adminAuthUser || get().socket?.connected) return;
 
         const socket = io(BASE_URL, {
           query: {
-            userId: authUser._id,
+            userId: adminAuthUser._id,
           },
         });
         socket.connect();
@@ -157,7 +153,7 @@ export const useAuthStore = create(
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        authUser: state.authUser,
+        adminAuthUser: state.adminAuthUser,
         // socket: state.socket,
       }),
     }
