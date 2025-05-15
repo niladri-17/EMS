@@ -80,22 +80,22 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
         {/* Admin routes */}
-        <Route path="/" element={<AdminLoginPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
 
         {/* Protected admin routes */}
-        <Route element={<AdminAuthProtection />}>
+        {/* <Route element={<AdminAuthProtection />}> */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/exams" element={<ExamsPage />} />
           <Route path="/admin/exams/create" element={<CreateExamPage />} />
           <Route path="/admin/questions" element={<QuestionsPage />} />
           <Route path="/admin/students" element={<StudentsPage />} />
           <Route path="/admin/results" element={<ResultsPage />} />
-        </Route>
+        {/* </Route> */}
 
         {/* Student exam routes */}
         {/* Exam ID route - entry point for exam takers */}
         <Route
-          path="/:examId"
+          path="/"
           element={
             !studentAuthUser ? (
               <MainLayout>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link, useParams } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useStudentStore } from "../store/useStudentStore";
 import { useEffect } from "react";
@@ -7,28 +7,26 @@ import { useEffect } from "react";
 const LoginPage = () => {
   const [formData, setFormData] = useState({
     emailId: "",
+    examId: "",
     examCode: "",
   });
 
   // Move useParams() to the top level of the component
-  const { examId: urlExamId } = useParams();
 
   const { examId, login, isLoggingIn, setExamId } = useStudentStore();
   console.log(examId);
 
   useEffect(() => {
-    if (!examId && urlExamId) {
-      setExamId(urlExamId);
+    if (!examId) {
+      setExamId(formData.examId);
     }
-  }, [examId, urlExamId, setExamId]);
+  }, [examId, formData.examId, setExamId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-
-      await login(examId, formData);
-
+      await login(formData);
     } catch (error) {
       console.error("Unexpected error during login:", error);
     }
@@ -88,6 +86,41 @@ const LoginPage = () => {
                   value={formData.emailId}
                   onChange={(e) =>
                     setFormData({ ...formData, emailId: e.target.value })
+                  }
+                  required
+                  className="input-field pl-10"
+                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Exam Id
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="text"
+                  placeholder="Enter your Exam Id"
+                  value={formData.examId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, examId: e.target.value })
                   }
                   required
                   className="input-field pl-10"

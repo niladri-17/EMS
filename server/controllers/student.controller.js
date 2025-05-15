@@ -57,8 +57,7 @@ export const registerStudent = async (req, res) => {
 };
 
 export const login = asyncHandler(async (req, res) => {
-  const { examCode, emailId } = req.body;
-  const examId = req.params.examId;
+  const { examCode, emailId, examId } = req.body;
 
   // 1. Validate the student by email
   const student = await User.findOne({ email: emailId, role: "student" });
@@ -122,6 +121,7 @@ export const login = asyncHandler(async (req, res) => {
         200,
         {
           user: loggedInUser,
+          examAttemptId: examAttempt._id,
           accessToken,
           refreshToken,
         },
@@ -129,6 +129,85 @@ export const login = asyncHandler(async (req, res) => {
       )
     );
 });
+
+export const saveAttempt = async (req, res) => {
+  try {
+    const { examAttemptId, answers } = req.body;
+
+    // Validate input
+    if (!examAttemptId) {
+      return res.status(400).json({ message: "examAttemptId is required" });
+    }
+
+    if (!answers || !Array.isArray(answers) || answers.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "answers array is required and cannot be empty" });
+    }
+
+    // Find the exam attempt
+    const examAttempt = await ExamAttempt.findById(examAttemptId);
+    if (!examAttempt) {
+      return res.status(404).json({ message: "Exam attempt not found" });
+    }
+
+    // Process each answer
+    const processedAnswers = [];
+
+    for (const answer of answers) {
+      // Validate each answer
+      if (!answer.question || !answer.selectedOption) {
+        return res.status(400).json({
+          message:
+            "Each answer must contain question and selectedOption fields",
+        });
+      }
+
+      // Find the question to check if the answer is correct
+      const question = await Question.findById(answer.question);
+      if (!question) {
+        return res.status(404).json({
+          message: `Question with ID ${answer.question} not found`,
+        });
+      }
+
+      // Determine if the answer is correct and calculate marks
+      const isCorrect = question.correctOption === answer.selectedOption;
+      const marksObtained = isCorrect ? question.marks || 0 : 0;
+
+      // Create the answer object
+      processedAnswers.push({
+        question: answer.question,
+        selectedOption: answer.selectedOption,
+        isCorrect,
+        marksObtained,
+      });
+    }
+
+    // Update the exam attempt with the new answers
+    examAttempt.answers = processedAnswers;
+
+    // Recalculate total marks
+    examAttempt.totalMarksObtained = processedAnswers.reduce(
+      (total, answer) => total + answer.marksObtained,
+      0
+    );
+
+    // Save the updated exam attempt
+    await examAttempt.save();
+
+    return res.status(200).json({
+      message: "Answers saved successfully",
+      examAttempt,
+    });
+  } catch (error) {
+    console.error("Error saving answers:", error);
+    return res.status(500).json({
+      message: "Failed to save answers",
+      error: error.message,
+    });
+  }
+};
 
 // View published & active exams
 export const getAvailableExams = async (req, res) => {

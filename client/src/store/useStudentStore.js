@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../lib/axios.js";
+import { saveAttempt } from "../../../server/controllers/student.controller.js";
 
 const BASE_URL = "http://localhost:500";
 
@@ -12,6 +13,7 @@ const createPersistedSlice = (set, get) => ({
   isPermissionsAccepted: false,
   isExamPrepared: false,
   examId: null,
+  examAttemptId: null,
 });
 
 // Create a slice for non-persisted state
@@ -22,6 +24,7 @@ const createNonPersistedSlice = (set, get) => ({
   isUpdatingProfile: false,
   isUsersSearching: false,
   examQuestions: [],
+  examAnswers: [],
 });
 
 export const useStudentStore = create(
@@ -54,12 +57,13 @@ export const useStudentStore = create(
       setIsExamPrepared: (value) => set({ isExamPrepared: value }),
       setExamId: (examId) => set({ examId: examId }),
 
-      login: async (examId, data) => {
+      login: async (data) => {
         set({ isLoggingIn: true });
         try {
           const examId = get().examId;
-          const res = await axiosInstance.post(`/login/${examId}`, data);
+          const res = await axiosInstance.post(`/login`, data);
           set({ studentAuthUser: res.data.data.user });
+          set({ examAttemptId: res.data.data.examAttemptId });
           toast.success(res.data.message);
           //   get().connectSocket();
         } catch (error) {
@@ -90,12 +94,26 @@ export const useStudentStore = create(
         try {
           const res = await axiosInstance.get(`questions/${examId}`);
           set({ examQuestions: res.data.data });
+          get().examQuestions.map((q) => set({ [`answer${q._id}`]: "" }));
           console.log("Exam Questions:", res.data.data);
         } catch (error) {
           console.log("Error in fetchExamQuestions:", error);
           toast.error(error.response.data.message);
         } finally {
           // set({ isFetchingExamQuestions: false });
+        }
+      },
+
+      saveAttempt: async (data) => {
+        // set({ isSavingAttempt: true });
+        try {
+          const res = await axiosInstance.post(`answers/save`, data);
+          toast.success(res.data.message);
+        } catch (error) {
+          console.log("Error in saveAttempt:", error);
+          toast.error(error.response.data.message);
+        } finally {
+          // set({ isSavingAttempt: false });
         }
       },
 

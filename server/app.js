@@ -13,9 +13,9 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    // origin: process.env.CORS_ORIGIN, // allow to server to accept request from different origin
-    origin: ["http://localhost:5173"],
-    credentials: true, // allows cookies, authorization headers, etc to be passed from client
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true, // if you're using cookies or auth headers
   })
 );
 
